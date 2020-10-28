@@ -45,14 +45,14 @@ def visualiser():
     global ani
     fig, ax = plt.subplots()
     ax.set_xlim([domainStart-0.5, domainEnd+0.5])
-    ax.set_ylim([y_min-0.5, y_max+0.5])
+    ax.set_ylim([y_min-2, y_max+2])
     ax.set_xlabel("x")
     ax.set_ylabel("f(x)")
     plt.title("Simulated Annealing")
     line, = ax.plot([], [])
     line.set_data([], [])
     scat = ax.scatter([], [], c="red")
-    text = ax.text((domainStart+domainEnd)/2,y_max+0.25,"")
+    text = ax.text((domainStart+domainEnd)/2,y_max+0.5,"")
 
     ani = animation.FuncAnimation(fig, animate, fargs = (line, scat, text), interval=50, blit=False)
 
@@ -66,12 +66,8 @@ def optima_solver(f, initTemp, finalTemp, mode, innerIter):
     curr = random.random()*(domainEnd-domainStart) + domainStart
     init_plotter(f, curr)
     temp = initTemp
-    y_min = f(domainStart)
-    y_max = f(domainEnd)
-    if(y_min>y_max):
-        tmp = y_min
-        y_min = y_max
-        y_max = tmp
+    y_min = np.min(y)
+    y_max = np.max(y)
     while(temp>finalTemp):
         # print(temp, curr)
         for i in range(0, innerIter):
