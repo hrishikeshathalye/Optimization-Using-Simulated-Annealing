@@ -7,94 +7,115 @@ arctan, arcsinh, arccosh, arctanh
 )
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-x_min = 0
-x_max = 0
+y_min = 0
+y_max = 0
 x = []
 y = []
 x_init = 0
 y_init = 0
 moves = []
 moveIndex = 0
+ani = 0
+domainStart = 0
+domainEnd = 0
 
-def init_plotter(f, start, domainStart, domainEnd):
-    global x_min, x_max, x, y, x_init, y_init
-    x_min = domainStart
-    x_max = domainEnd
-    x = np.linspace(x_min, x_max, 20000)
+def init_plotter(f, start):
+    global x, y, x_init, y_init
+    x = np.linspace(domainStart, domainEnd, 2000)
     y = f(x)
     x_init = start # Starting point
     y_init = f(x_init)
 
 def animate(i, line, scat, text):
-    global moves
-    global moveIndex
+    global moves, moveIndex, ani
     try:
         nextx = moves[moveIndex][0]
     except IndexError:
-        print(i)
-        return
-    nexty = moves[moveIndex][1]
-    moveIndex+=1
-	# Update the plot
-    scat.set_offsets([[nextx,nexty]])
-    text.set_text("Value : %.5f" % nexty)
-    line.set_data(x, y)
-    return line, scat, text
+        ani.event_source.stop()
+    else:
+        nexty = moves[moveIndex][1]
+        moveIndex+=1
+        # Update the plot
+        scat.set_offsets([[nextx,nexty]])
+        text.set_text("Value : %.5f" % nexty)
+        line.set_data(x, y)
+        return line, scat, text
 
 def visualiser():
+    global ani
     fig, ax = plt.subplots()
-    ax.set_xlim([x_min, x_max])
-    ax.set_ylim([-3, 3])
+    ax.set_xlim([domainStart-0.5, domainEnd+0.5])
+    ax.set_ylim([y_min-0.5, y_max+0.5])
     ax.set_xlabel("x")
     ax.set_ylabel("f(x)")
     plt.title("Simulated Annealing")
     line, = ax.plot([], [])
     line.set_data([], [])
     scat = ax.scatter([], [], c="red")
-    text = ax.text(0,2.5,"")
+    text = ax.text((domainStart+domainEnd)/2,y_max+0.25,"")
 
-    ani = animation.FuncAnimation(fig, animate, fargs = (line, scat, text), interval=100, blit=True)
+    ani = animation.FuncAnimation(fig, animate, fargs = (line, scat, text), interval=50, blit=False)
 
     plt.show()
 
 def probFunction(cost, temp):
-    # print(cost)
-    # print(temp)
     return 1/(1+np.exp(-cost/temp))
 
-def optima_solver(f, step, initTemp, finalTemp, reductionRule):
-    global moves
-    curr = -1.57
+def optima_solver(f, initTemp, finalTemp, mode, innerIter):
+    global moves, x_init, y_min, y_max
+    curr = random.random()*(domainEnd-domainStart) + domainStart
+    init_plotter(f, curr)
     temp = initTemp
+    y_min = f(domainStart)
+    y_max = f(domainEnd)
+    if(y_min>y_max):
+        tmp = y_min
+        y_min = y_max
+        y_max = tmp
     while(temp>finalTemp):
         # print(temp, curr)
-        currcost = f(curr)
-        moves.append((curr, currcost))
-        if(random.randint(0, 1)):
-            nextcost = f(curr-step)
-            next = curr-step
-        else:
-            nextcost = f(curr+step)
-            next = curr+step
-        if(nextcost>=currcost):
-            curr = next
-        else:
-            p = probFunction(nextcost-currcost, temp)
-            # print(p)
-            if(random.random()<=p):
+        for i in range(0, innerIter):
+            currcost = f(curr)
+            y_min = min(currcost, y_min)
+            y_max = max(currcost, y_max)
+            moves.append((curr, currcost))
+            if(random.randint(0, 1)):
+                if(curr-step<domainStart):
+                    continue
+                nextcost = f(curr-step)
+                next = curr-step
+            else:
+                if(curr+step>domainEnd):
+                    continue
+                nextcost = f(curr+step)
+                next = curr+step
+            if(nextcost>=currcost and mode=="maxima"):
                 curr = next
-        temp-=0.1
-        # print(temp)
+            elif(nextcost<=currcost and mode=="minima"):
+                curr = next
+            else:
+                p = probFunction(nextcost-currcost, temp)
+                # print(p)
+                if(random.random()<=p):
+                    curr = next
+        temp*=0.8
+    y_min = min(f(curr), y_min)
+    y_max = max(f(curr), y_max)
     moves.append((curr, f(curr)))
-    return f(curr)
+    return (curr, f(curr))
 
 if __name__ == "__main__":
     exprStr = input("Enter y as a function of x:\n")
     f = lambda x: eval(exprStr)
-    # mode = input("Mode (Maxima/Minima):\n").lower()
-    # print("Set Following Parameters:")
-    # domainStart = int(input("Domain Start:\n"))
-    # domainEnd = int(input("Domain End:\n"))
-    print(optima_solver(f, 0.5, 100, 0, "abc"))
-    init_plotter(f, 0, -7, 7)
+    mode = input("Mode (Maxima/Minima):\n").lower()
+    print("Set Following Parameters:")
+    domainStart = float(input("Domain Start:\n"))
+    domainEnd = float(input("Domain End:\n"))
+    initialTemp = float(input("Initial Temperature:\n"))
+    finalTemp = float(input("Final Temperature:\n"))
+    innerIter = int(input("No of times to run inner loop:\n"))
+    # alpha = float(input("Temperature step size:\n")
+    step = float(input("Step size:\n"))
+    print("(x,y) For Optima:")
+    print(optima_solver(f, initialTemp, finalTemp, mode, innerIter))
     visualiser()
