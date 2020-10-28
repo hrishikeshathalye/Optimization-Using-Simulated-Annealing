@@ -44,15 +44,16 @@ def animate(i, line, scat, text):
 def visualiser():
     global ani
     fig, ax = plt.subplots()
-    ax.set_xlim([domainStart-0.5, domainEnd+0.5])
-    ax.set_ylim([y_min-2, y_max+2])
+    span = y_max-y_min
+    ax.set_xlim([domainStart-2, domainEnd+2])
+    ax.set_ylim([y_min-span/5, y_max+span/5])
     ax.set_xlabel("x")
     ax.set_ylabel("f(x)")
     plt.title("Simulated Annealing")
     line, = ax.plot([], [])
     line.set_data([], [])
     scat = ax.scatter([], [], c="red")
-    text = ax.text((domainStart+domainEnd)/2,y_max+0.5,"")
+    text = ax.text((domainStart+domainEnd)/2,y_max+span/10,"")
 
     ani = animation.FuncAnimation(fig, animate, fargs = (line, scat, text), interval=50, blit=False)
 
@@ -68,7 +69,8 @@ def optima_solver(f, initTemp, finalTemp, mode, innerIter):
     temp = initTemp
     y_min = np.min(y)
     y_max = np.max(y)
-    while(temp>finalTemp):
+    j = 1
+    while(temp-0.0001>finalTemp):
         # print(temp, curr)
         for i in range(0, innerIter):
             currcost = f(curr)
@@ -94,7 +96,8 @@ def optima_solver(f, initTemp, finalTemp, mode, innerIter):
                 # print(p)
                 if(random.random()<=p):
                     curr = next
-        temp*=0.8
+        temp=temp-1
+        j+=1
     y_min = min(f(curr), y_min)
     y_max = max(f(curr), y_max)
     moves.append((curr, f(curr)))
