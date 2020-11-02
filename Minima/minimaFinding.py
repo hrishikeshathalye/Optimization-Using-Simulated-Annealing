@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import math
 from numpy import (
 power, sqrt, log, sin, sinh, cos, 
 cosh, tan, tanh, arcsin, arccos, 
@@ -34,10 +35,11 @@ def animate(i, line, scat, text):
         ani.event_source.stop()
     else:
         nexty = moves[moveIndex][1]
+        nextTemp = moves[moveIndex][2]
         moveIndex+=1
         # Update the plot
         scat.set_offsets([[nextx,nexty]])
-        text.set_text("Value : %.5f" % nexty)
+        text.set_text("Value : %.5f, Temp : %.5f" % (nexty, nextTemp))
         line.set_data(x, y)
         return line, scat, text
 
@@ -53,7 +55,7 @@ def visualiser():
     line, = ax.plot([], [])
     line.set_data([], [])
     scat = ax.scatter([], [], c="red")
-    text = ax.text((domainStart+domainEnd)/2,y_max+span/10,"")
+    text = ax.text(domainStart+(domainEnd-domainStart)*0.3,y_max+span/10,"")
 
     ani = animation.FuncAnimation(fig, animate, fargs = (line, scat, text), interval=50, blit=False)
 
@@ -62,7 +64,7 @@ def visualiser():
 def probFunction(cost, temp):
     return 1/(1+np.exp(-cost/temp))
 
-def optima_solver(f, initTemp, finalTemp, mode, innerIter):
+def optima_solver(f, initTemp, finalTemp, mode, alpha):
     global moves, x_init, y_min, y_max
     curr = random.random()*(domainEnd-domainStart) + domainStart
     init_plotter(f, curr)
@@ -72,11 +74,11 @@ def optima_solver(f, initTemp, finalTemp, mode, innerIter):
     j = 1
     while(temp-0.0001>finalTemp):
         # print(temp, curr)
-        for i in range(0, innerIter):
+        for i in range(0, 1+math.ceil(temp/10)):
             currcost = f(curr)
             y_min = min(currcost, y_min)
             y_max = max(currcost, y_max)
-            moves.append((curr, currcost))
+            moves.append((curr, currcost, temp))
             if(random.randint(0, 1)):
                 if(curr-step<domainStart):
                     continue
@@ -96,11 +98,11 @@ def optima_solver(f, initTemp, finalTemp, mode, innerIter):
                 # print(p)
                 if(random.random()<=p):
                     curr = next
-        temp=temp-1
+        temp=temp*alpha
         j+=1
     y_min = min(f(curr), y_min)
     y_max = max(f(curr), y_max)
-    moves.append((curr, f(curr)))
+    moves.append((curr, f(curr), temp))
     return (curr, f(curr))
 
 if __name__ == "__main__":
@@ -112,9 +114,9 @@ if __name__ == "__main__":
     domainEnd = float(input("Domain End:\n"))
     initialTemp = float(input("Initial Temperature:\n"))
     finalTemp = float(input("Final Temperature:\n"))
-    innerIter = int(input("No of times to run inner loop:\n"))
-    # alpha = float(input("Temperature step size:\n")
+    # innerIter = int(input("No of times to run inner loop:\n"))
+    alpha = float(input("Temperature reduction parameter (alpha):\n")
     step = float(input("Step size:\n"))
     print("(x,y) For Optima:")
-    print(optima_solver(f, initialTemp, finalTemp, mode, innerIter))
+    print(optima_solver(f, initialTemp, finalTemp, mode, alpha))
     visualiser()
