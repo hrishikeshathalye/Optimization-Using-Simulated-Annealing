@@ -35,6 +35,7 @@ def animateTSP(history, points):
     ''' animate precalulated solutions '''
     init()
     ani = FuncAnimation(fig, update, frames=range(0, len(history), 10), interval=1, repeat=False)
+    #ani.save('tsp.gif', writer='imagemagick')
     plt.show()
 
 def nearestNeighbours(distMatrix):

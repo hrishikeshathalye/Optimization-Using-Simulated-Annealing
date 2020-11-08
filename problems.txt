@@ -1,5 +1,0 @@
-I have tried to implement solutions to the following problems:
-1. Minima Finding
-2. Travelling Salesman Problem
-3. Map Coloring
-4. Job Scheduling

@@ -58,6 +58,7 @@ def visualiser():
     text = ax.text(domainStart+(domainEnd-domainStart)*0.3,y_max+span/10,"")
 
     ani = animation.FuncAnimation(fig, animate, fargs = (line, scat, text), interval=50, blit=False)
+    #ani.save('minima.gif', writer='imagemagick')
 
     plt.show()
 
@@ -66,7 +67,7 @@ def probFunction(cost, temp):
 
 def optima_solver(f, initTemp, finalTemp, mode, alpha):
     global moves, x_init, y_min, y_max
-    curr = random.random()*(domainEnd-domainStart) + domainStart
+    curr = random.random()*(domainEnd-domainStart)
     init_plotter(f, curr)
     temp = initTemp
     y_min = np.min(y)

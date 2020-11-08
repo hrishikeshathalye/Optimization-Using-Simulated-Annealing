@@ -117,6 +117,7 @@ if __name__ == "__main__":
 	print("Number Of Colors Needed: ", len(set(colorValues.values())) )
 	pos = netx.spring_layout(G)
 	ani = matplotlib.animation.FuncAnimation(plt.gcf(), update_frame, frames=len(history), interval=500, repeat=False)
+	#ani.save('coloring.gif', writer='imagemagick')
 	manager = plt.get_current_fig_manager()
 	manager.window.showMaximized()
 	plt.show()
