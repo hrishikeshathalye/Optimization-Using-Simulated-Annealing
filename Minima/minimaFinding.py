@@ -115,7 +115,7 @@ if __name__ == "__main__":
     initialTemp = float(input("Initial Temperature:\n"))
     finalTemp = float(input("Final Temperature:\n"))
     # innerIter = int(input("No of times to run inner loop:\n"))
-    alpha = float(input("Temperature reduction parameter (alpha):\n")
+    alpha = float(input("Temperature reduction parameter (alpha):\n"))
     step = float(input("Step size:\n"))
     print("(x,y) For Optima:")
     print(optima_solver(f, initialTemp, finalTemp, mode, alpha))
