@@ -2,6 +2,7 @@ import networkx as netx
 import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.animation as animation
+from collections import OrderedDict
 import numpy as np
 import random
 import math
@@ -31,38 +32,47 @@ def generateNode(visitedColors, nodeList):
 	return random.choice(unvisited)
 
 #Welsh Powell Heuristic on which SA will be used
-def welshPowellHeuristic(G):
+def welshPowellHeuristicWithSA(G):
 	global history
 	#sorting the nodes based on its degree
 	temp = initialTemp
-	nodeList = sorted(G.nodes(), key =lambda x:len(list(G.neighbors(x))) )
-	visitedColors = {} #dictionary to store the colors assigned to each node
+	nodeList = G.nodes()
+	visitedColors = OrderedDict() #dictionary to store the colors assigned to each node
 	startNode = generateNode(visitedColors, nodeList)
 	visitedColors[startNode] = 0 #assign the first color to the first node
 	history.append(list(visitedColors.values()) + [1]*(len(nodeList)-1))
-	while( (len(visitedColors)!=len(nodeList)) and temp-0.0001>finalTemp ):
-		for i in range(0, 1+math.ceil(temp/10)):
-			node = generateNode(visitedColors, nodeList)
-			available = [True] * len(G.nodes()) #boolean list[i] contains false if the node color 'i' is not available
+	sa_on = 1
+	remNodes = list(set(nodeList) - set(visitedColors.keys()))
+	remNodes = sorted(remNodes, key =lambda x:len(list(G.neighbors(x))))
+	while( (len(visitedColors)!=len(nodeList))):
+		if(sa_on):
+			range_end = 1+math.ceil(temp/10)
+		else:
+			range_end = len(remNodes)
+		for i in range(0, range_end):
+			node = remNodes[i%len(remNodes)]
+			available = set(range(len(G.nodes()))) #boolean list[i] contains false if the sa_on==0node color 'i' is not available
 			#iterates through all the adjacent nodes and marks it's color as unavailable, if it's color has been set already
 			for adj_node in G.neighbors(node): 
 				if adj_node in visitedColors.keys():
 					col = visitedColors[adj_node]
-					available[col] = False
-			clr = 0
-			for clr in range(len(available)):
-				if available[clr] == True:
-					break
+					available = available - set([col])
+			clr = list(available)[0]
 			if(clr in visitedColors.values()):
-				visitedColors[node] = clr	
+				visitedColors[node] = clr
 			else:
-				if(accept(1, temp)):
+				if(sa_on==0 or accept(1, temp)):
 					visitedColors[node] = clr
+			visitedColors = OrderedDict(sorted(visitedColors.items(), key=lambda x: x[0]))
 			history.append(list(visitedColors.values()) + [1]*(len(nodeList) - len(visitedColors)))
+			remNodes = list(set(nodeList) - set(visitedColors.keys()))
+			remNodes = sorted(remNodes, key =lambda x:len(list(G.neighbors(x))))
 			if(len(visitedColors)==len(nodeList)):
 				break
 		temp*=alpha
-	
+		if(temp-0.0001<finalTemp):
+			sa_on = 0
+
 	return visitedColors
 
 def CreateGraph():
@@ -84,7 +94,7 @@ def update_frame(frames):
 	global G, pos
 	plt.cla()
 	c_map = next(color_map, list(colorValues.values()))
-	netx.draw(G, pos, with_labels = True, node_color = c_map, edge_color = 'black' ,width = 1, font_color='white')
+	netx.draw(G, pos, with_labels = True,nodelist=sorted(G.nodes()) ,node_color = c_map, edge_color = 'black' ,width = 1, font_color='black', alpha=0.9)
 
 if __name__ == "__main__":
 	mode = input("Mode - Random Graph (r) / From File (f):\n")
@@ -97,9 +107,9 @@ if __name__ == "__main__":
 		G = CreateGraph()
 	else:
 		G = netx.gnp_random_graph(numNodes,0.5)
-	colorValues = welshPowellHeuristic(G)
+	colorValues = welshPowellHeuristicWithSA(G)
 	print("Node Colors Obtained: ", colorValues)
 	print("Number Of Colors Needed: ", len(set(colorValues.values())) )
 	pos = netx.spring_layout(G)
-	ani = matplotlib.animation.FuncAnimation(plt.gcf(), update_frame, frames=len(history), interval=100, repeat=False)
+	ani = matplotlib.animation.FuncAnimation(plt.gcf(), update_frame, frames=len(history), interval=250, repeat=False)
 	plt.show()
