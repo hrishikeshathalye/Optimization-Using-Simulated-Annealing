@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import math
 import random
 
 def animateTSP(history, points):
@@ -12,7 +13,7 @@ def animateTSP(history, points):
         ''' initialize node dots on graph '''
         x = [points[i][0] for i in history[0]]
         y = [points[i][1] for i in history[0]]
-        plt.plot(x, y, 'co')
+        plt.plot(x, y, 'ro')
 
         ''' draw axes slighty bigger  '''
         extra_x = (max(x) - min(x)) * 0.05
@@ -32,10 +33,8 @@ def animateTSP(history, points):
         return line
 
     ''' animate precalulated solutions '''
-
-    ani = FuncAnimation(fig, update, frames=range(0, len(history), key_frames_mult),
-                        init_func=init, interval=3, repeat=False)
-
+    init()
+    ani = FuncAnimation(fig, update, frames=range(0, len(history), 10), interval=1, repeat=False)
     plt.show()
 
 def nearestNeighbours(distMatrix):
@@ -44,15 +43,16 @@ def nearestNeighbours(distMatrix):
     '''
     initialNode = random.randint(0, len(distMatrix)-1)
     resultList = [initialNode]
+    currnode = initialNode
 
     visitList = list(range(len(distMatrix)))
-    visitList.remove(node)
+    visitList.remove(initialNode)
 
     while visitList:
-        nearestNeighbour = min([(distMatrix[node][j], j) for j in visitList], key=lambda tmp: tmp[0])
-        node = nearestNeighbour[1]
-        visitList.remove(node)
-        resultList.append(node)
+        nearestNeighbour = min([(distMatrix[currnode][j], j) for j in visitList], key=lambda tmp: tmp[0])
+        currnode = nearestNeighbour[1]
+        visitList.remove(currnode)
+        resultList.append(currnode)
 
     return resultList
 
@@ -64,9 +64,9 @@ def getDistMatrix(coords):
 
 #Returning a list of tuples of coordinates
 def randomMapGen(width, height, numberOfNodes):
-    yCoordinates = np.random.randint(height, size=nodesNumber)
-    xCoordinates = np.random.randint(width, size=nodesNumber)
-    return np.array(zip(xCoordinates, yCoordinates))
+    yCoordinates = np.random.randint(height, size=numberOfNodes)
+    xCoordinates = np.random.randint(width, size=numberOfNodes)
+    return np.array(list(zip(xCoordinates, yCoordinates)))
 
 class TSPSolver:
     def __init__(self, coords, startingTemp, finalTemp, alpha):
@@ -78,7 +78,7 @@ class TSPSolver:
         self.currIteration = 1
 
         self.distMatrix = getDistMatrix(coords)
-        self.currSoln = tsp_utils.nearestNeighbours(self.distMatrix)
+        self.currSoln = nearestNeighbours(self.distMatrix)
         self.bestSoln = self.currSoln
         self.solutions = [self.currSoln]
 
@@ -86,7 +86,7 @@ class TSPSolver:
         self.initialCost = self.currCost
         self.minCost = self.currCost
         self.costList = [self.currCost]
-        print('Intial Cost (Nearest Neighbours Solution): ', self.currCost)
+        print('Initial Cost (Nearest Neighbours Solution): ', self.currCost)
 
     def probFunction(self, cost):
         return 1/(1+np.exp(-cost/self.currTemp))
@@ -107,33 +107,33 @@ class TSPSolver:
                 self.currCost = candidateSolutionCost
                 self.currSoln = candidateSoln
         self.costList.append(self.currCost)
-        self.solutions.append(self.currSoln)
+        self.solutions.append(self.currSoln.copy())
 
     def simulatedAnnealing(self):
         '''
         Uses 2 opt heuristic combined with simulated annealing for accepting solution
         '''
-        while (self.currTemp >= self.finalTemp):
+        while (self.currTemp-0.0001 >= self.finalTemp):
             for i in range(0, 1+math.ceil(self.currTemp/10)):
                 candidateSoln = self.currSoln
                 point1 = random.randint(2, self.numPoints - 1)
                 point2 = point1 + random.randint(0, self.numPoints - point1)
-                candidateSoln[point1: point2] = list(reversed(candidate[i: (i + l)]))
-                self.acceptSoln(candidate)
+                candidateSoln[point1: point2] = list(reversed(candidateSoln[point1: point2]))
+                self.acceptSoln(candidateSoln)
                 self.currTemp *= self.alpha
                 self.currIteration += 1
 
         print('Minimum Cost Of Tour: ', self.minCost)
 
     def animateSolutions(self):
-        animated_visualizer.animateTSP(self.solutions, self.coords)
+        animateTSP(self.solutions, self.coords)
 
     def plotLearning(self):
-        plt.plot([i for i in range(len(self.weight_list))], self.weight_list)
-        line_init = plt.axhline(y=self.initial_weight, color='r', linestyle='--')
-        line_min = plt.axhline(y=self.min_weight, color='g', linestyle='--')
-        plt.legend([line_init, line_min], ['Initial weight', 'Optimized weight'])
-        plt.ylabel('Weight')
+        plt.plot([i for i in range(len(self.costList))], self.costList)
+        line_init = plt.axhline(y=self.initialCost, color='r', linestyle='--')
+        line_min = plt.axhline(y=self.minCost, color='g', linestyle='--')
+        plt.legend([line_init, line_min], ['Initial Cost', 'Final Cost'])
+        plt.ylabel('Cost')
         plt.xlabel('Iteration')
         plt.show()
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     initialTemp = float(input("Initial Temperature:\n"))
     finalTemp = float(input("Final Temperature:\n"))
     # innerIter = int(input("No of times to run inner loop:\n"))
-    alpha = float(input("Temperature reduction parameter (alpha):\n")
+    alpha = float(input("Temperature reduction parameter (alpha):\n"))
     #Random nodes generated in the domain
     TSPmap = randomMapGen(gridWidth, gridHeight, numberOfNodes)
     s = TSPSolver(TSPmap, initialTemp, finalTemp, alpha)
