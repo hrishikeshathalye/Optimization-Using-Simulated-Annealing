@@ -1,5 +1,8 @@
 # Optimization-Using-Simulated-Annealing
 Examples and visualisations on using Simulated Annealing to solve various optimization problems.
+Simulated Annealing is a metaheuristic algorithm that can be used to solve combinatiorial optimization problems. This repo contains exemplar implementations and visualisations of the algorithm.
+
+<h2>Examples</h2>
 
 <h3>Minima Finding</h3>
 
@@ -12,6 +15,3 @@ Examples and visualisations on using Simulated Annealing to solve various optimi
 <h3>Travelling Salesman Problem</h3>
 
 ![](https://github.com/hrishikeshathalye/Optimization-Using-Simulated-Annealing/blob/main/TSP/tsp.gif)
-
-
-<embed src="https://github.com/hrishikeshathalye/Optimization-Using-Simulated-Annealing/blob/main/AI%20Project.pdf" type="application/pdf">
