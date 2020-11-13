@@ -4,7 +4,7 @@ Simulated Annealing is a metaheuristic algorithm that can be used to solve combi
 
 <h2>Examples</h2>
 
-<h3>Minima Finding</h3>
+<h3>Optima Finding</h3>
 
 ![](https://github.com/hrishikeshathalye/Optimization-Using-Simulated-Annealing/blob/main/Minima/minima.gif)
 
